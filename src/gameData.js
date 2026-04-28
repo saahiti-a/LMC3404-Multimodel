@@ -1,281 +1,301 @@
-export const scenarioData = {
-  student: {
-    id: "student",
-    codename: "OP-CAMPUS",
-    title: "Campus Copilot",
-    domain: "Education",
-    riskLabel: "Low Risk",
-    riskClass: "low",
-    summary:
-      "Students want a fast research and drafting assistant, but the mission is to prevent overreliance and keep human judgment in the loop.",
-    benefit: "Speeds up brainstorming and revision support",
-    harm: "Overreliance, shallow learning, and hidden inaccuracies",
-    oversight: "Disclosure, citation guidance, and clear school rules",
-    harmScore: 30,
-    oversightScore: 35,
-    winRange: [25, 55],
-    required: ["transparency", "labeling"],
-    reward: "Low-risk systems still need visible disclosure.",
+export const missionData = [
+  {
+    id: "school",
+    code: "LEVEL 1",
+    title: "School Spark",
+    icon: "Pencil",
+    risk: "low",
+    place: "Classroom Lab",
+    summary: "Kids use an AI helper to brainstorm ideas and study faster.",
+    challenge: "Keep it useful without letting it do all the thinking.",
+    bestLevel: "light",
+    bestTools: ["labels", "human-check"],
+    lesson: "Low-risk AI still needs honesty and a little guidance.",
+    fact: "This comes from the report's idea that simple uses can have lighter rules.",
+    burst: "Gold stars for smart, light-touch rules.",
+    unlockScore: 66,
+    themeClass: "theme-school",
+    missionType: "Notebook Run",
+    blurb:
+      "A teacher wants students to use an AI study buddy for brainstorming and revision, but not as a shortcut for doing the whole assignment.",
+    decisionQuestion: "How much guidance does a classroom helper need before it becomes too controlling?",
+    toolQuestion: "Which tools keep students informed without making the system feel heavy?",
+    stepLabels: ["Pack the plan", "Choose class tools", "Teacher review"],
+    actionLabels: {
+      step1: "Build Study Plan",
+      step2: "Check Classroom Setup",
+      result: "Review School Result",
+    },
   },
-  teacher: {
-    id: "teacher",
-    codename: "OP-CLASSROOM",
-    title: "Classroom Control",
-    domain: "Education governance",
-    riskLabel: "Moderate Risk",
-    riskClass: "medium",
-    summary:
-      "Teachers can automate planning and feedback, but fairness, grading clarity, and review become more sensitive.",
-    benefit: "Improves planning speed and differentiated support",
-    harm: "Biased grading, vague accountability, and poor review",
-    oversight: "Human review, transparency, and school policy guidance",
-    harmScore: 55,
-    oversightScore: 60,
-    winRange: [45, 70],
-    required: ["transparency", "human", "testing"],
-    reward: "Moderate-risk systems need oversight without killing usefulness.",
+  {
+    id: "news",
+    code: "LEVEL 2",
+    title: "News Nebula",
+    icon: "Antenna",
+    risk: "medium",
+    place: "City Broadcast Tower",
+    summary: "A public chatbot shares updates with lots of people at once.",
+    challenge: "One wrong answer can spread fast and confuse a whole crowd.",
+    bestLevel: "balanced",
+    bestTools: ["labels", "test-lab"],
+    lesson: "Public information needs checking before it flies everywhere.",
+    fact: "The report highlights misinformation as a big reason for oversight.",
+    burst: "Signal cleared. The city can trust the updates.",
+    unlockScore: 66,
+    themeClass: "theme-news",
+    missionType: "Signal Tower",
+    blurb:
+      "A city service chatbot is posting updates for a lot of people very quickly, so mistakes can spread before anyone notices.",
+    decisionQuestion: "What level of oversight keeps fast public updates trustworthy?",
+    toolQuestion: "Which checks help catch misinformation before it spreads?",
+    stepLabels: ["Tune the signal", "Add broadcast checks", "Newsroom review"],
+    actionLabels: {
+      step1: "Set Signal Rules",
+      step2: "Test Broadcast Setup",
+      result: "Review News Result",
+    },
   },
-  public: {
-    id: "public",
-    codename: "OP-BROADCAST",
-    title: "Public Info Engine",
-    domain: "Public communication",
-    riskLabel: "Moderate Risk",
-    riskClass: "medium",
-    summary:
-      "Public-facing AI can improve access to information, but misinformation at scale can damage trust quickly.",
-    benefit: "Expands speed and reach of communication",
-    harm: "Scaled misinformation and credibility damage",
-    oversight: "Labeling, testing, monitoring, and correction systems",
-    harmScore: 68,
-    oversightScore: 72,
-    winRange: [50, 75],
-    required: ["transparency", "testing", "labeling"],
-    reward: "Public systems need visible accountability and rapid correction.",
+  {
+    id: "art",
+    code: "LEVEL 3",
+    title: "Creator Canyon",
+    icon: "Palette",
+    risk: "medium",
+    place: "Studio Valley",
+    summary: "Artists are worried an AI model learned from creative work unfairly.",
+    challenge: "Protect creators while still allowing new ideas to grow.",
+    bestLevel: "balanced",
+    bestTools: ["creator-credit", "labels"],
+    lesson: "Transparency and credit help when AI uses training data from creators.",
+    fact: "The report talks about copyright and data-use questions around AI training.",
+    burst: "Creator credit restored. The art portal is glowing again.",
+    unlockScore: 66,
+    themeClass: "theme-art",
+    missionType: "Studio Trail",
+    blurb:
+      "Creators are questioning whether an AI art system trained on their work fairly and whether people can tell where ideas came from.",
+    decisionQuestion: "What kind of rules protect creators without shutting down creative tools?",
+    toolQuestion: "Which tools make the system more transparent to artists and users?",
+    stepLabels: ["Sketch the rules", "Add studio tools", "Creator review"],
+    actionLabels: {
+      step1: "Draft Creator Rules",
+      step2: "Check Studio Setup",
+      result: "Review Creator Result",
+    },
   },
-  finance: {
-    id: "finance",
-    codename: "OP-LEDGER",
-    title: "Money Mentor Bot",
-    domain: "Finance",
-    riskLabel: "High Risk",
-    riskClass: "high",
-    summary:
-      "Financial systems shape savings, debt, and risk. A bad recommendation can create lasting harm.",
-    benefit: "Makes basic financial guidance more accessible",
-    harm: "Bad advice with real monetary consequences",
-    oversight: "Audits, human review, and rigorous testing",
-    harmScore: 84,
-    oversightScore: 88,
-    winRange: [65, 90],
-    required: ["human", "testing", "audit"],
-    reward: "High-risk financial tools need strong scrutiny before release.",
+  {
+    id: "money",
+    code: "LEVEL 4",
+    title: "Money Meteor",
+    icon: "Coin",
+    risk: "high",
+    place: "Future Bank",
+    summary: "An AI tool gives savings and debt advice to families.",
+    challenge: "Bad advice here can cost real money and hurt people for a long time.",
+    bestLevel: "strong",
+    bestTools: ["human-check", "test-lab"],
+    lesson: "Financial AI needs strong review before people trust it with money.",
+    fact: "The report argues that higher-stakes areas need stronger protection.",
+    burst: "Vault secured. Safe advice beats risky speed.",
+    unlockScore: 72,
+    themeClass: "theme-money",
+    missionType: "Vault Route",
+    blurb:
+      "A family budgeting assistant gives advice about savings, debt, and money choices, so bad suggestions can cause real harm.",
+    decisionQuestion: "How strict should a financial AI be watched before people trust its advice?",
+    toolQuestion: "Which tools reduce the chance of risky money guidance?",
+    stepLabels: ["Lock the policy", "Add vault checks", "Finance review"],
+    actionLabels: {
+      step1: "Set Vault Rules",
+      step2: "Check Finance Setup",
+      result: "Review Vault Result",
+    },
   },
-  health: {
+  {
     id: "health",
-    codename: "OP-TRIAGE",
-    title: "Clinic Triage AI",
-    domain: "Healthcare",
-    riskLabel: "High Risk",
-    riskClass: "high",
-    summary:
-      "Medical systems can sound confident even when wrong, so weak oversight can produce direct real-world harm.",
-    benefit: "Improves access to general health information",
-    harm: "Unsafe medical decisions and misplaced trust",
-    oversight: "Strict testing, privacy controls, expert review, and narrow rollout",
-    harmScore: 92,
-    oversightScore: 95,
-    winRange: [70, 95],
-    required: ["human", "testing", "privacy", "audit"],
-    reward: "Healthcare needs safety to clearly outweigh speed.",
-  },
-};
-
-export const scenarioOrder = ["student", "teacher", "public", "finance", "health"];
-
-export const safeguardEffects = {
-  transparency: { safety: 6, accountability: 10, innovation: -1 },
-  human: { safety: 10, accountability: 8, innovation: -5 },
-  testing: { safety: 12, accountability: 5, innovation: -4 },
-  privacy: { safety: 8, accountability: 6, innovation: -2 },
-  audit: { safety: 7, accountability: 12, innovation: -5 },
-  labeling: { safety: 5, accountability: 8, innovation: 0 },
-};
-
-export const contextWeights = {
-  student: { baseSafety: 22, baseInnovation: 82, baseAccountability: 30 },
-  teacher: { baseSafety: 42, baseInnovation: 72, baseAccountability: 48 },
-  public: { baseSafety: 54, baseInnovation: 65, baseAccountability: 58 },
-  finance: { baseSafety: 74, baseInnovation: 54, baseAccountability: 76 },
-  health: { baseSafety: 84, baseInnovation: 46, baseAccountability: 82 },
-};
-
-export const allSafeguards = ["transparency", "human", "testing", "privacy", "audit", "labeling"];
-
-export const crisisEvents = [
-  {
-    id: "deepfake",
-    title: "Signal Intercept: Deepfake Surge",
-    prompt:
-      "A public chatbot is pushing misleading election summaries. Pick the fastest proportional response.",
-    options: [
-      {
-        label: "Require visible AI labels and rapid takedown review",
-        effect: { trust: 10, safety: 12, innovation: -3, xp: 25 },
-        note: "Correct. Public-facing systems need fast correction and clear disclosure.",
-      },
-      {
-        label: "Wait for the company to self-correct",
-        effect: { trust: -12, safety: -10, innovation: 4, xp: 4 },
-        note: "Too passive. Public harm spreads faster than voluntary cleanup.",
-      },
-      {
-        label: "Ban all generative AI systems immediately",
-        effect: { trust: 3, safety: 8, innovation: -16, xp: 10 },
-        note: "You reduced harm, but the response was broader than the risk.",
-      },
-    ],
-  },
-  {
-    id: "hospital",
-    title: "Signal Intercept: Hospital Pilot",
-    prompt:
-      "A hospital wants to deploy an AI triage assistant next week. What must happen first?",
-    options: [
-      {
-        label: "External testing, human review, and narrow rollout",
-        effect: { trust: 11, safety: 15, innovation: -4, xp: 28 },
-        note: "Correct. High-risk healthcare deployment needs strong validation.",
-      },
-      {
-        label: "Launch now with a short disclaimer",
-        effect: { trust: -14, safety: -15, innovation: 6, xp: 2 },
-        note: "A disclaimer does not replace safeguards in medicine.",
-      },
-      {
-        label: "Allow launch if the vendor promises accuracy",
-        effect: { trust: -8, safety: -9, innovation: 2, xp: 5 },
-        note: "Vendor confidence is not evidence.",
-      },
-    ],
-  },
-  {
-    id: "copyright",
-    title: "Signal Intercept: Copyright Clash",
-    prompt:
-      "Artists challenge an AI platform’s training data. Which response best fits the mission?",
-    options: [
-      {
-        label: "Force transparency about training data and dispute procedures",
-        effect: { trust: 9, safety: 6, innovation: -2, xp: 22 },
-        note: "Strong move. Transparency supports accountability and fairness.",
-      },
-      {
-        label: "Ignore the complaint because innovation matters more",
-        effect: { trust: -11, safety: -4, innovation: 7, xp: 3 },
-        note: "Short-term speed, long-term legitimacy damage.",
-      },
-      {
-        label: "Criminalize all training on internet data",
-        effect: { trust: 1, safety: 3, innovation: -18, xp: 7 },
-        note: "Too blunt. The issue is real, but the response is not proportional.",
-      },
-    ],
+    code: "LEVEL 5",
+    title: "Health Harbor",
+    icon: "Heart",
+    risk: "high",
+    place: "Clinic Cloud",
+    summary: "A medical helper suggests what patients should do next.",
+    challenge: "Confident but wrong medical advice can be dangerous.",
+    bestLevel: "strong",
+    bestTools: ["human-check", "privacy-lock"],
+    lesson: "Healthcare AI needs testing, privacy, and real human oversight.",
+    fact: "The report uses healthcare as a clear example of why context matters.",
+    burst: "Harbor shielded. Safety comes first in healthcare.",
+    unlockScore: 75,
+    themeClass: "theme-health",
+    missionType: "Clinic Approach",
+    blurb:
+      "A medical helper gives next-step suggestions to patients, so confident mistakes could affect health and safety directly.",
+    decisionQuestion: "How much protection is needed before a healthcare AI should be trusted?",
+    toolQuestion: "Which safeguards matter most when patient safety is involved?",
+    stepLabels: ["Set clinic rules", "Add patient safeguards", "Safety review"],
+    actionLabels: {
+      step1: "Set Clinic Rules",
+      step2: "Check Patient Safeguards",
+      result: "Review Health Result",
+    },
   },
 ];
 
-export const quizData = [
+export const levelCards = [
   {
-    question: "What is the core doctrine of this mission?",
+    id: "light",
+    name: "Light Touch",
+    icon: "Breeze",
+    description: "Fast and friendly rules for low-risk missions.",
+    flavor: "Great when the stakes are small.",
+  },
+  {
+    id: "balanced",
+    name: "Smart Shield",
+    icon: "Shield",
+    description: "A middle path that checks risk without freezing progress.",
+    flavor: "Best for tricky but not extreme cases.",
+  },
+  {
+    id: "strong",
+    name: "Power Guard",
+    icon: "Lock",
+    description: "Strong protection for high-stakes decisions.",
+    flavor: "Use this when mistakes could seriously hurt people.",
+  },
+];
+
+export const toolCards = [
+  {
+    id: "labels",
+    name: "Clear Labels",
+    icon: "Tag",
+    description: "Tell people when AI is talking.",
+  },
+  {
+    id: "human-check",
+    name: "Human Check",
+    icon: "Hand",
+    description: "A real person reviews the most important answers.",
+  },
+  {
+    id: "test-lab",
+    name: "Test Lab",
+    icon: "Flask",
+    description: "Try the AI carefully before it goes live.",
+  },
+  {
+    id: "privacy-lock",
+    name: "Privacy Lock",
+    icon: "Key",
+    description: "Protect sensitive personal information.",
+  },
+  {
+    id: "creator-credit",
+    name: "Creator Credit",
+    icon: "Spark",
+    description: "Show where training data and creative sources came from.",
+  },
+];
+
+export const quickQuiz = [
+  {
+    question: "What is the big idea of the game?",
     options: [
-      "Every AI tool should face the same rules",
-      "Riskier contexts should face stronger oversight",
-      "Companies should regulate themselves",
-      "All AI systems should be banned in education",
+      "Every AI tool should get the exact same rules",
+      "Riskier AI jobs need stronger safety rules",
+      "No AI should ever be used by anyone",
     ],
     answer: 1,
-    feedback:
-      "Correct. The project argues for proportional, risk-based regulation rather than a universal rule.",
   },
   {
-    question: "Why is transparency important but insufficient?",
-    options: [
-      "Because it only matters in entertainment",
-      "Because transparency replaces testing",
-      "Because users need disclosure, but high-risk systems still need testing and accountability",
-      "Because transparency always harms innovation",
-    ],
-    answer: 2,
-    feedback:
-      "Correct. Transparency builds trust, but high-risk systems also need stronger safeguards.",
+    question: "Which place usually needs the strongest safety checks?",
+    options: ["Healthcare", "Brainstorming homework", "A fun class poster"],
+    answer: 0,
   },
 ];
 
-export function clamp(value) {
-  return Math.max(0, Math.min(100, Math.round(value)));
+export function getMissionById(id) {
+  return missionData.find((mission) => mission.id === id) ?? missionData[0];
 }
 
-export function rangeLabel(value) {
-  if (value < 35) return "Minimal Oversight";
-  if (value < 70) return "Balanced Oversight";
-  return "Strict Oversight";
+export function clamp(value, min = 0, max = 100) {
+  return Math.max(min, Math.min(max, value));
 }
 
-export function formatSafeguard(name) {
+export function getRiskLabel(risk) {
   return {
-    transparency: "Transparency Reports",
-    human: "Human Review",
-    testing: "Pre-Release Testing",
-    privacy: "Data Protections",
-    audit: "Independent Audits",
-    labeling: "Clear AI Labeling",
-  }[name];
+    low: "Low Risk",
+    medium: "Medium Risk",
+    high: "High Risk",
+  }[risk];
 }
 
-export function getRank(xp) {
-  if (xp >= 140) return "Director";
-  if (xp >= 90) return "Field Strategist";
-  if (xp >= 45) return "Analyst";
-  return "Rookie Agent";
+export function getRank(stars) {
+  if (stars >= 13) return "Galaxy Guardian";
+  if (stars >= 9) return "Shield Captain";
+  if (stars >= 5) return "Safety Scout";
+  return "Rookie Ranger";
 }
 
-export function computePolicyResult(context, oversightValue, safeguards) {
-  const base = contextWeights[context];
-  let innovation = base.baseInnovation - oversightValue * 0.22;
-  let safety = base.baseSafety + oversightValue * 0.3;
-  let accountability = base.baseAccountability + oversightValue * 0.24;
-
-  safeguards.forEach((name) => {
-    innovation += safeguardEffects[name].innovation;
-    safety += safeguardEffects[name].safety;
-    accountability += safeguardEffects[name].accountability;
-  });
-
-  innovation = clamp(innovation);
-  safety = clamp(safety);
-  accountability = clamp(accountability);
-
-  return { innovation, safety, accountability };
+export function getProgress(completedCount) {
+  return clamp(Math.round((completedCount / missionData.length) * 100));
 }
 
-export function computeMissionFit({ context, missionId, oversightValue, safeguards, policy }) {
-  const mission = scenarioData[missionId];
-  const [min, max] = mission.winRange;
-  const center = (min + max) / 2;
-  const distance = Math.abs(oversightValue - center);
-  const oversightScore = clamp(100 - distance * 3.2);
-  const safeguardsScore =
-    (mission.required.filter((item) => safeguards.includes(item)).length / mission.required.length) * 100;
-  const contextScore = context === missionId ? 100 : 40;
-  const balanceScore = clamp((policy.safety + policy.accountability + policy.innovation) / 3);
-  const score = clamp(
-    oversightScore * 0.4 + safeguardsScore * 0.3 + contextScore * 0.2 + balanceScore * 0.1
-  );
+export function scoreMission(mission, levelId, tools) {
+  let stars = 0;
+  let score = 25;
 
-  return {
-    score,
-    missing: mission.required
-      .filter((item) => !safeguards.includes(item))
-      .map((item) => formatSafeguard(item)),
-  };
+  if (levelId === mission.bestLevel) {
+    score += 35;
+    stars += 2;
+  } else if (isNeighborLevel(levelId, mission.bestLevel)) {
+    score += 18;
+    stars += 1;
+  }
+
+  const matchedTools = mission.bestTools.filter((tool) => tools.includes(tool)).length;
+  score += matchedTools * 18;
+  stars += matchedTools;
+
+  if (tools.length > 2) {
+    score -= (tools.length - 2) * 8;
+  }
+
+  score = clamp(score);
+  stars = clamp(stars, 0, 4);
+
+  let result = "miss";
+  if (score >= 88) result = "perfect";
+  else if (score >= 66) result = "good";
+
+  const feedback =
+    result === "perfect"
+      ? mission.burst
+      : result === "good"
+        ? "Nice save. You matched the mission pretty well, but there is room to tune it."
+        : "The mission needs a better safety match. Try a different rule strength or helper tools.";
+
+  return { score, stars, matchedTools, result, feedback };
+}
+
+export function getUnlockedMissionIds(missionResults) {
+  const unlocked = [missionData[0].id];
+
+  for (let index = 1; index < missionData.length; index += 1) {
+    const previous = missionData[index - 1];
+    const previousResult = missionResults[previous.id];
+    if (previousResult && previousResult.score >= previous.unlockScore) {
+      unlocked.push(missionData[index].id);
+      continue;
+    }
+    break;
+  }
+
+  return unlocked;
+}
+
+function isNeighborLevel(levelId, bestLevel) {
+  const order = ["light", "balanced", "strong"];
+  return Math.abs(order.indexOf(levelId) - order.indexOf(bestLevel)) === 1;
 }

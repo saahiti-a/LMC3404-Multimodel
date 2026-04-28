@@ -1,99 +1,69 @@
-import { useMemo } from "react";
-import { AppShell, Meter } from "./components";
+import { AppShell, IconBubble, Meter } from "./components";
 import { useGame } from "./GameContext";
-import {
-  clamp,
-  crisisEvents,
-  formatSafeguard,
-  quizData,
-  rangeLabel,
-  scenarioData,
-} from "./gameData";
+import { getRiskLabel, levelCards, toolCards } from "./gameData";
 
 export function BriefingPage() {
-  const { gameStats, rank, totalProgress, resetCampaign } = useGame();
+  const game = useGame();
 
   return (
-    <AppShell stats={gameStats} rank={rank} progress={totalProgress}>
-      <section className="page page-briefing">
-        <div className="page-hero dossier-hero">
+    <AppShell stats={makeStats(game)}>
+      <section className="page hero-page">
+        <div className="hero-card">
           <div className="hero-copy">
-            <p className="eyebrow">Secure Briefing</p>
-            <h1>Operation: Regulate ChatGPT</h1>
+            <p className="eyebrow">Mission Brief</p>
+            <h1>Match each AI situation with the right amount of protection.</h1>
             <p className="lede">
-              You are not reading a report. You are running a short covert mission.
-              Your objective is to protect the public while preserving useful
-              innovation. Move through four screens: briefing, dossier selection,
-              field response, and debrief.
+              The point of the game is simple: not every AI tool should be handled
+              the same way. Low-stakes uses need lighter rules. High-stakes uses
+              need stronger checks.
             </p>
             <div className="hero-actions">
               <a className="button button-primary" href="#/missions">
-                Open Mission Deck
+                Open World Map
               </a>
-              <button className="button button-secondary" type="button" onClick={resetCampaign}>
-                Reset Campaign
-              </button>
+              <a className="button button-secondary" href="#/field">
+                Continue Current Mission
+              </a>
             </div>
           </div>
 
-          <div className="briefing-hud">
-            <div className="briefing-scan"></div>
-            <p className="panel-kicker">Agent Status</p>
-            <div className="hud-topline">
-              <div>
-                <span className="hud-label">Rank</span>
-                <strong>{rank}</strong>
-              </div>
-              <div>
-                <span className="hud-label">XP</span>
-                <strong className="xp-pop">{gameStats.xp}</strong>
-              </div>
-              <div>
-                <span className="hud-label">Campaign</span>
-                <strong>{totalProgress}%</strong>
-              </div>
-            </div>
-            <div className="hud-meters">
-              <Meter label="Public Trust" value={gameStats.trust} tone="green" />
-              <Meter label="Safety" value={gameStats.safety} tone="red" />
-              <Meter label="Innovation" value={gameStats.innovation} tone="amber" />
+          <div className="hero-orbit" aria-hidden="true">
+            <div className="planet planet-one"></div>
+            <div className="planet planet-two"></div>
+            <div className="planet planet-three"></div>
+            <div className="mascot-card">
+              <div className="mascot-face">^_^</div>
+              <p>Pick the rule strength that fits the risk.</p>
             </div>
           </div>
         </div>
 
-        <div className="briefing-grid">
-          <article className="brief-card">
-            <p className="panel-kicker">Mission Rules</p>
-            <h3>How to win quickly</h3>
-            <div className="rule-list">
-              <div className="rule-chip">Choose one dossier at a time</div>
-              <div className="rule-chip">Match oversight to the risk level</div>
-              <div className="rule-chip">Use safeguards proportionally</div>
-              <div className="rule-chip">Respond to crisis events fast</div>
-            </div>
-          </article>
-          <article className="brief-card">
-            <p className="panel-kicker">Core Doctrine</p>
-            <h3>What the game is teaching</h3>
+        <div className="dashboard-grid dashboard-grid-compact">
+          <article className="panel">
+            <p className="panel-kicker">How It Works</p>
+            <h3>One choice at a time</h3>
             <p>
-              The thesis is simple: risky systems need stronger oversight, while
-              lower-risk systems should face lighter regulation. The whole game is
-              built to demonstrate that one-size-fits-all policy is weaker than
-              risk-based regulation.
+              First choose a scenario, then choose a rule strength, then add the
+              support tools that help that kind of AI stay safe.
             </p>
           </article>
-          <CharacterCard
-            code="DV"
-            name="Director Vale"
-            role="Mission Control"
-            dialogue="Keep your explanation simple: the more dangerous the AI use, the stronger the oversight should be."
-          />
-          <CharacterCard
-            code="NV"
-            name="Nova"
-            role="Policy Analyst"
-            dialogue="If you are unsure what to do, load the recommended preset first. Then compare it to a weaker or stricter version."
-          />
+          <article className="panel">
+            <p className="panel-kicker">Why It Matters</p>
+            <h3>The report’s main idea</h3>
+            <p>
+              The project argues for risk-based regulation, which means the level
+              of oversight should change depending on what the AI is being used for.
+            </p>
+          </article>
+          <article className="panel">
+            <p className="panel-kicker">Status</p>
+            <h3>{game.rank}</h3>
+            <div className="meter-stack">
+              <Meter label="Progress" value={game.progress} tone="sun" />
+              <Meter label="Safety" value={game.safety} tone="coral" />
+              <Meter label="Spark" value={game.spark} tone="mint" />
+            </div>
+          </article>
         </div>
       </section>
     </AppShell>
@@ -101,120 +71,129 @@ export function BriefingPage() {
 }
 
 export function MissionsPage() {
-  const {
-    completedMissions,
-    currentScenario,
-    deployMission,
-    gameStats,
-    missionFit,
-    missionMessage,
-    rank,
-    safeguards,
-    scenarioOrder,
-    selectMission,
-    setContext,
-    setOversightValue,
-    setMissionMessage,
-    totalProgress,
-  } = useGame();
-
-  function fastPreset(id) {
-    selectMission(id);
-    setContext(id);
-    const mission = scenarioData[id];
-    setOversightValue(Math.round((mission.winRange[0] + mission.winRange[1]) / 2));
-    setMissionMessage(`Preset loaded for ${mission.codename}. Refine it and deploy.`);
-  }
+  const game = useGame();
+  const destinationUnlocked = game.completedMissionIds.length === game.missionData.length;
 
   return (
-    <AppShell stats={gameStats} rank={rank} progress={totalProgress}>
+    <AppShell stats={makeStats(game)}>
       <section className="page">
-        <div className="section-heading">
-          <p className="eyebrow">Mission Deck</p>
-          <h2>Choose a dossier</h2>
+        <div className="section-heading section-heading-narrow">
+          <p className="eyebrow">World Map</p>
+          <h2>Follow the route from the first mission to the final zone</h2>
           <p>
-            Keep this screen short in your demo: pick one low-risk mission and one
-            high-risk mission to show why the policy changes by context.
+            Each stop on the path is one AI use case from the report. Beat a level
+            with the required score to unlock the next checkpoint.
           </p>
         </div>
 
-        <div className="mission-grid mission-grid-wide">
-          {scenarioOrder.map((id) => {
-            const item = scenarioData[id];
-            const cleared = completedMissions.includes(id);
-            return (
-              <article className={`mission-card ${currentScenario.id === id ? "active" : ""} ${cleared ? "cleared" : ""}`} key={id}>
-                <div className="mission-card-top">
-                  <span className="mission-code">{item.codename}</span>
-                  <span className={`risk-badge ${item.riskClass}`}>{item.riskLabel}</span>
+        <div className="map-stage">
+          <div className="map-overview">
+            <article className="panel map-scoreboard">
+              <p className="panel-kicker">Campaign Scoreboard</p>
+              <h3>Mission progress</h3>
+              <div className="score-row score-row-large">
+                <div>
+                  <span>Campaign Score</span>
+                  <strong>{game.campaignScore}</strong>
                 </div>
-                <h3>{item.title}</h3>
-                <p>{item.summary}</p>
-                <div className="mission-tags">
-                  {item.required.map((requirement) => (
-                    <span key={requirement}>{formatSafeguard(requirement)}</span>
-                  ))}
+                <div>
+                  <span>Average</span>
+                  <strong>{game.averageScore || "--"}</strong>
                 </div>
-                <div className="hero-actions">
-                  <button className="button button-primary" type="button" onClick={() => selectMission(id)}>
-                    Load Dossier
-                  </button>
-                  <button className="button button-secondary" type="button" onClick={() => fastPreset(id)}>
-                    Quick Preset
-                  </button>
+                <div>
+                  <span>Unlocked</span>
+                  <strong>
+                    {game.unlockedMissionIds.length}/{game.missionData.length}
+                  </strong>
                 </div>
-              </article>
-            );
-          })}
-        </div>
+              </div>
+              <div className="meter-stack">
+                <Meter label="Route Progress" value={game.progress} tone="sun" />
+              </div>
+              <p className="helper-copy">
+                {game.nextLockedMission
+                  ? `Next unlock: score ${game.missionData.find((mission) => mission.id === game.unlockedMissionIds[game.unlockedMissionIds.length - 1])?.unlockScore} or higher on the current frontier mission to open ${game.nextLockedMission.title}.`
+                  : "All checkpoints are unlocked. Head for the final gateway."}
+              </p>
+            </article>
 
-        <div className="mission-brief">
-          <article className="brief-card">
-            <p className="panel-kicker">Loaded Dossier</p>
-            <h3>{currentScenario.title}</h3>
-            <p>{currentScenario.domain}</p>
-            <div className="scenario-stats">
-              <div>
-                <span>Recommended zone</span>
-                <strong>
-                  {currentScenario.winRange[0]} to {currentScenario.winRange[1]}
-                </strong>
+            <article className="panel map-legend">
+              <p className="panel-kicker">Route Guide</p>
+              <h3>How to read the map</h3>
+              <div className="map-legend-list">
+                <span className="chip">Glowing nodes are cleared</span>
+                <span className="chip">Blue node is your active mission</span>
+                <span className="chip">Locked nodes open after the needed score</span>
+                <span className="chip">Finish the route to reach the gateway</span>
               </div>
-              <div>
-                <span>Mission fit</span>
-                <strong>{missionFit.score}%</strong>
+            </article>
+          </div>
+
+          <div className="path-map">
+            <div className="path-lane" aria-hidden="true"></div>
+            <div className="path-start">
+              <div className="start-badge">Start</div>
+              <p>Launch point</p>
+            </div>
+
+            {game.missionData.map((mission, index) => {
+              const cleared = game.completedMissionIds.includes(mission.id);
+              const active = game.selectedMissionId === mission.id;
+              const unlocked = game.unlockedMissionIds.includes(mission.id);
+              const offsetClass = index % 2 === 0 ? "left" : "right";
+
+              return (
+                <article
+                  key={mission.id}
+                  className={`map-node mission-card ${offsetClass} ${active ? "active" : ""} ${cleared ? "cleared" : ""} ${!unlocked ? "locked" : ""}`}
+                >
+                  <div className="map-node-marker" aria-hidden="true">
+                    <span className={`map-node-core ${cleared ? "cleared" : active ? "active" : !unlocked ? "locked" : ""}`}></span>
+                  </div>
+              <div className="mission-head">
+                <span className={`risk-badge ${mission.risk}`}>{getRiskLabel(mission.risk)}</span>
+                <span className="mission-code">{mission.code}</span>
               </div>
+              <IconBubble icon={mission.icon} />
+              <h3>{mission.title}</h3>
+              <p>{mission.summary}</p>
+              <p className="scenario-blurb">{mission.blurb}</p>
+              <p className="helper-copy">
+                <strong>Unlock rule:</strong>{" "}
+                {index === 0 ? "available now" : `previous mission needs ${game.missionData[index - 1].unlockScore}+`}
+              </p>
+                  <div className="hero-actions">
+                    <button
+                      className="button button-primary"
+                      type="button"
+                      disabled={!unlocked}
+                      onClick={() => game.selectMission(mission.id)}
+                    >
+                      {unlocked ? "Set Active Mission" : "Locked"}
+                    </button>
+                    <a
+                      className={`button button-secondary ${!unlocked ? "button-disabled" : ""}`}
+                      href={unlocked ? "#/field" : "#/missions"}
+                      aria-disabled={!unlocked}
+                    >
+                      Enter Mission
+                    </a>
+                  </div>
+                </article>
+              );
+            })}
+
+            <div className={`path-finish ${destinationUnlocked ? "unlocked" : ""}`}>
+              <div className="finish-core">End</div>
               <div>
-                <span>Required safeguards</span>
-                <strong>{currentScenario.required.map(formatSafeguard).join(", ")}</strong>
+                <h3>Governance Gateway</h3>
+                <p>
+                  The finish represents the big takeaway: AI rules should scale with
+                  the risk of the job.
+                </p>
               </div>
             </div>
-            <div className="meter tone-green">
-              <span style={{ width: `${missionFit.score}%` }}></span>
-            </div>
-            <p className="mission-message">{missionMessage}</p>
-            <div className="hero-actions">
-              <button
-                className="button button-primary"
-                type="button"
-                onClick={() => {
-                  deployMission();
-                  window.location.hash = "/field";
-                }}
-              >
-                Deploy to Field Ops
-              </button>
-            </div>
-          </article>
-          <article className="brief-card">
-            <p className="panel-kicker">Why it matters</p>
-            <h3>Same technology, different mission profile</h3>
-            <p>
-              A student brainstorming tool and a medical triage assistant are not
-              equally dangerous. This screen gives you the clearest way to explain
-              the thesis in class.
-            </p>
-          </article>
+          </div>
         </div>
       </section>
     </AppShell>
@@ -222,412 +201,374 @@ export function MissionsPage() {
 }
 
 export function FieldPage() {
-  const {
-    allSafeguards,
-    applyMissionPreset,
-    context,
-    currentScenario,
-    deployMission,
-    gameStats,
-    missionFit,
-    missionMessage,
-    oversightValue,
-    policy,
-    rank,
-    resolvedEvents,
-    riskInputs,
-    safeguards,
-    setContext,
-    setOversightValue,
-    setRiskInputs,
-    toggleSafeguard,
-    totalProgress,
-    resolveEvent,
-  } = useGame();
-
-  const riskScore = clamp(
-    Number(riskInputs.impact) +
-      Number(riskInputs.data) +
-      Number(riskInputs.review) +
-      Number(riskInputs.scale)
-  );
-
-  const riskLabel = useMemo(() => {
-    if (riskScore < 40) return "Low Threat";
-    if (riskScore >= 70) return "High Threat";
-    return "Moderate Threat";
-  }, [riskScore]);
+  const game = useGame();
+  const mission = game.currentMission;
+  const step = game.activeStep;
+  const currentScore = game.missionResults[mission.id]?.score ?? 0;
+  const canAdvance = currentScore >= mission.unlockScore;
 
   return (
-    <AppShell stats={gameStats} rank={rank} progress={totalProgress}>
-      <section className="page">
-        <div className="section-heading">
-          <p className="eyebrow">Field Operations</p>
-          <h2>Three steps: choose, load, deploy</h2>
-          <p>
-            This is the core demo page. The easiest demo flow is: choose the mission,
-            press the recommended preset, deploy it, then show one crisis response.
-          </p>
-        </div>
-
-        <div className="briefing-grid field-briefing-grid">
-          <CharacterCard
-            code="DV"
-            name="Director Vale"
-            role="Mission Control"
-            dialogue={`Current assignment: ${currentScenario.title}. Your job is to match the policy to the danger level, not to make every mission identical.`}
-          />
-          <CharacterCard
-            code="NV"
-            name="Nova"
-            role="Policy Analyst"
-            dialogue={getNoviceTip(currentScenario.riskClass)}
-          />
-        </div>
-
-        <div className="lab-grid">
-          <form className="lab-controls" onSubmit={(event) => event.preventDefault()}>
-            <div className="step-card">
-              <p className="panel-kicker">Step 1</p>
-              <h3>Choose the mission</h3>
-              <p className="helper-copy">
-                This decides what kind of AI system you are regulating.
-              </p>
-            </div>
-            <label>
-              Active context
-              <select value={context} onChange={(event) => setContext(event.target.value)}>
-                {Object.values(scenarioData).map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="step-card">
-              <p className="panel-kicker">Step 2</p>
-              <h3>Choose a policy style</h3>
-              <p className="helper-copy">
-                These buttons are the easiest way to understand the game.
-              </p>
-              <div className="preset-row">
-                <button className="button button-secondary" type="button" onClick={() => applyMissionPreset("lighter")}>
-                  Too Weak
-                </button>
-                <button className="button button-primary" type="button" onClick={() => applyMissionPreset("recommended")}>
-                  Recommended
-                </button>
-                <button className="button button-secondary" type="button" onClick={() => applyMissionPreset("stricter")}>
-                  Too Strict
-                </button>
+    <AppShell stats={makeStats(game)}>
+      <section className="page page-tight">
+        <div className={`scenario-shell ${mission.themeClass}`}>
+          <aside className="scenario-hud">
+            <div className="hud-top">
+              <div>
+                <p className="panel-kicker">Scenario HUD</p>
+                <h3>{mission.title}</h3>
               </div>
+              <IconBubble icon={mission.icon} />
             </div>
-            <label>
-              Oversight intensity
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={oversightValue}
-                onChange={(event) => setOversightValue(Number(event.target.value))}
-              />
-            </label>
-            <div className="range-scale">
-              <span>Minimal Oversight</span>
-              <strong>{rangeLabel(oversightValue)}</strong>
-              <span>Strict Oversight</span>
-            </div>
-            <fieldset className="safeguard-fieldset">
-              <legend>Step 3: Choose safeguards</legend>
-              {allSafeguards.map((name) => (
-                <label key={name} className={`loadout-chip ${safeguards.includes(name) ? "active" : ""}`}>
-                  <input
-                    type="checkbox"
-                    checked={safeguards.includes(name)}
-                    onChange={() => toggleSafeguard(name)}
-                  />
-                  {formatSafeguard(name)}
-                </label>
-              ))}
-            </fieldset>
-            <button className="button button-primary" type="button" onClick={deployMission}>
-              Deploy Policy
-            </button>
-          </form>
 
-          <div className="lab-output">
-            <article className="output-card output-card-featured">
-              <p className="output-kicker">Mission Telemetry</p>
-              <h3>{currentScenario.title}</h3>
-              <p>{missionMessage}</p>
-              <div className="simple-outcome">
-                <div className={`outcome-pill ${missionFit.score >= 80 ? "success" : missionFit.score >= 60 ? "warning" : "danger"}`}>
-                  {missionFit.score >= 80
-                    ? "Likely success"
-                    : missionFit.score >= 60
-                      ? "Almost there"
-                      : "Needs adjustment"}
+            <div className="hud-summary">
+              <div className="hud-chip-row">
+                <span className={`risk-badge ${mission.risk}`}>{getRiskLabel(mission.risk)}</span>
+                <span className="mission-code">{mission.code}</span>
+              </div>
+              <p className="helper-copy">
+                <strong>Context:</strong> {mission.place}
+              </p>
+              <p className="helper-copy">
+                <strong>Mission type:</strong> {mission.missionType}
+              </p>
+              <p className="helper-copy">
+                <strong>Case file:</strong> {mission.blurb}
+              </p>
+              <p className="helper-copy">
+                <strong>Score needed:</strong> {mission.unlockScore}+ to open the next checkpoint.
+              </p>
+              <p className="fact-note">{mission.fact}</p>
+            </div>
+
+            <div className="meter-stack">
+              <Meter label="Safety" value={game.safety} tone="coral" />
+              <Meter label="Spark" value={game.spark} tone="mint" />
+              <Meter label="Mission Score" value={currentScore} tone="sun" />
+            </div>
+
+            <div className="step-rail">
+              <button type="button" className={`step-dot ${step === 1 ? "active" : ""}`} onClick={() => game.setActiveStep(1)}>1</button>
+              <button type="button" className={`step-dot ${step === 2 ? "active" : ""}`} onClick={() => game.setActiveStep(2)}>2</button>
+              <button type="button" className={`step-dot ${step === 3 ? "active" : ""}`} onClick={() => game.setActiveStep(3)}>3</button>
+            </div>
+          </aside>
+
+          <div className="scenario-main">
+            <div className="panel panel-intro">
+              <p className="panel-kicker">Current Situation</p>
+              <h2>{mission.challenge}</h2>
+              <p>
+                This panel tells you what problem you are solving before you make
+                any choices. Start with the rule strength that feels proportional,
+                then add tools that support that decision.
+              </p>
+              <div className="mission-context-grid">
+                <div className="context-card">
+                  <span>Case File</span>
+                  <p>{mission.blurb}</p>
                 </div>
-                <p className="helper-copy">
-                  {missionFit.score >= 80
-                    ? "This policy roughly matches the risk level of the mission."
-                    : missionFit.score >= 60
-                      ? "You are close, but the policy still needs a small fix."
-                      : "The policy is too weak, too strict, or aimed at the wrong mission."}
-                </p>
-              </div>
-              <div className="tradeoff-bars">
-                <Meter label="Innovation" value={policy.innovation} tone="amber" />
-                <Meter label="Safety" value={policy.safety} tone="red" />
-                <Meter label="Accountability" value={policy.accountability} tone="green" />
-                <Meter label="Mission Fit" value={missionFit.score} tone="green" />
-              </div>
-            </article>
-
-            <article className="output-card">
-              <p className="output-kicker">Threat Scanner</p>
-              <p className="helper-copy">
-                This mini-tool asks one simple question: how bad would it be if this
-                AI made a mistake?
-              </p>
-              <div className="calculator-grid compact-calculator">
-                <form className="calculator-card" onSubmit={(event) => event.preventDefault()}>
-                  <label>
-                    Impact if the system fails
-                    <select
-                      value={riskInputs.impact}
-                      onChange={(event) =>
-                        setRiskInputs((prev) => ({ ...prev, impact: Number(event.target.value) }))
-                      }
-                    >
-                      <option value="15">Low</option>
-                      <option value="35">Moderate</option>
-                      <option value="60">High</option>
-                    </select>
-                  </label>
-                  <label>
-                    Sensitive data
-                    <select
-                      value={riskInputs.data}
-                      onChange={(event) =>
-                        setRiskInputs((prev) => ({ ...prev, data: Number(event.target.value) }))
-                      }
-                    >
-                      <option value="10">Limited</option>
-                      <option value="25">Some</option>
-                      <option value="40">Highly sensitive</option>
-                    </select>
-                  </label>
-                  <label>
-                    Human review
-                    <select
-                      value={riskInputs.review}
-                      onChange={(event) =>
-                        setRiskInputs((prev) => ({ ...prev, review: Number(event.target.value) }))
-                      }
-                    >
-                      <option value="-20">Consistent</option>
-                      <option value="0">Sometimes</option>
-                      <option value="20">Rarely</option>
-                    </select>
-                  </label>
-                  <label>
-                    Scale
-                    <select
-                      value={riskInputs.scale}
-                      onChange={(event) =>
-                        setRiskInputs((prev) => ({ ...prev, scale: Number(event.target.value) }))
-                      }
-                    >
-                      <option value="5">Small</option>
-                      <option value="20">Many users</option>
-                      <option value="35">Mass public</option>
-                    </select>
-                  </label>
-                </form>
-                <div className="calculator-result">
-                  <h3>{riskLabel}</h3>
-                  <div className="dial-wrap">
-                    <div
-                      className="dial"
-                      style={{
-                        background: `radial-gradient(circle closest-side, #10180f 72%, transparent 73% 100%), conic-gradient(#9fe870 ${
-                          riskScore * 3.6
-                        }deg, rgba(255,255,255,0.08) 0deg)`,
-                      }}
-                    >
-                      <div className="dial-inner">
-                        <strong>{riskScore}</strong>
-                        <span>/ 100</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="context-card">
+                  <span>Decision Focus</span>
+                  <p>{mission.decisionQuestion}</p>
                 </div>
               </div>
-            </article>
-          </div>
-        </div>
+              <MissionScene missionId={mission.id} step={step} passed={canAdvance} />
+            </div>
 
-        <div className="arcade-grid">
-          {crisisEvents.map((event) => {
-            const resolution = resolvedEvents[event.id];
-            return (
-              <article className={`event-card ${resolution ? "resolved" : ""}`} key={event.id}>
-                <p className="panel-kicker">{event.title}</p>
-                <h3>{event.prompt}</h3>
+            <div className="progress-strip">
+              <div className={`progress-step ${step >= 1 ? "live" : ""}`}>{mission.stepLabels[0]}</div>
+              <div className={`progress-step ${step >= 2 ? "live" : ""}`}>{mission.stepLabels[1]}</div>
+              <div className={`progress-step ${step >= 3 ? "live" : ""}`}>{mission.stepLabels[2]}</div>
+            </div>
+
+            {step === 1 ? (
+              <article className="panel step-panel">
+                <p className="panel-kicker">Step 1</p>
+                <h3>Choose the rule strength</h3>
                 <p className="helper-copy">
-                  Pick the response that feels proportional. Not too weak, not wildly
-                  overreactive.
+                  {mission.decisionQuestion}
                 </p>
-                <div className="event-options">
-                  {event.options.map((option, index) => (
+                <div className="choice-grid">
+                  {levelCards.map((level) => (
                     <button
-                      key={option.label}
+                      key={level.id}
                       type="button"
-                      className={`event-option ${resolution?.selected === index ? "chosen" : ""}`}
-                      disabled={Boolean(resolution)}
-                      onClick={() => resolveEvent(event.id, index)}
+                      className={`choice-card ${game.selectedLevel === level.id ? "selected" : ""}`}
+                      onClick={() => game.setSelectedLevel(level.id)}
                     >
-                      {option.label}
+                      <strong>{level.name}</strong>
+                      <span>{level.description}</span>
+                      <small>{level.flavor}</small>
                     </button>
                   ))}
                 </div>
-                <p className="event-note">
-                  {resolution
-                    ? resolution.note
-                    : "Choose a response that matches the level of risk instead of reacting blindly."}
-                </p>
+                <div className="hero-actions section-actions">
+                  <button className="button button-primary" type="button" onClick={() => game.setActiveStep(2)}>
+                    {mission.actionLabels.step1}
+                  </button>
+                </div>
               </article>
-            );
-          })}
+            ) : null}
+
+            {step === 2 ? (
+              <article className="panel step-panel">
+                <p className="panel-kicker">Step 2</p>
+                <h3>Add support tools</h3>
+                <p className="helper-copy">
+                  {mission.toolQuestion}
+                </p>
+                <div className="tool-grid">
+                  {toolCards.map((tool) => (
+                    <button
+                      key={tool.id}
+                      type="button"
+                      className={`tool-card ${game.selectedTools.includes(tool.id) ? "selected" : ""}`}
+                      onClick={() => game.toggleTool(tool.id)}
+                    >
+                      <span className="tool-icon">{tool.icon}</span>
+                      <strong>{tool.name}</strong>
+                      <span>{tool.description}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="hero-actions section-actions">
+                  <button className="button button-secondary" type="button" onClick={() => game.setActiveStep(1)}>
+                    Back
+                  </button>
+                  <button className="button button-primary" type="button" onClick={game.playMission}>
+                    {mission.actionLabels.step2}
+                  </button>
+                </div>
+              </article>
+            ) : null}
+
+            {step === 3 ? (
+              <article className={`panel result-panel ${game.lastResult?.result ?? ""}`}>
+                <p className="panel-kicker">Step 3</p>
+                <h3>{mission.actionLabels.result}</h3>
+                <p className="helper-copy">
+                  This result shows whether your choices matched the level of risk
+                  in the scenario and whether the next mission is now unlocked.
+                </p>
+                <div className="result-box">
+                  <div className={`result-badge ${game.lastResult?.result ?? "idle"}`}>
+                    {game.lastResult?.result === "perfect"
+                      ? "Perfect Match"
+                      : game.lastResult?.result === "good"
+                        ? "Good Match"
+                        : game.lastResult?.result === "miss"
+                          ? "Needs Work"
+                          : "Ready"}
+                  </div>
+                  <p>{game.lastResult?.feedback ?? "Run the mission check to see how well your setup fits."}</p>
+                  <div className="score-row">
+                    <div>
+                      <span>Stars</span>
+                      <strong>{game.lastResult?.stars ?? 0}</strong>
+                    </div>
+                    <div>
+                      <span>Score</span>
+                      <strong>{game.lastResult?.score ?? "--"}</strong>
+                    </div>
+                    <div>
+                      <span>Need For Next</span>
+                      <strong>{mission.unlockScore}</strong>
+                    </div>
+                  </div>
+                  <p className={`unlock-message ${canAdvance ? "success" : "warning"}`}>
+                    {canAdvance
+                      ? "Checkpoint cleared. The next level is unlocked."
+                      : `You need ${mission.unlockScore}+ on this mission to unlock the next checkpoint.`}
+                  </p>
+                </div>
+                <div className="hero-actions section-actions">
+                  <button className="button button-secondary" type="button" onClick={() => game.setActiveStep(1)}>
+                    Adjust Choices
+                  </button>
+                  <button className="button button-primary" type="button" onClick={game.nextMission}>
+                    Load Next Available Mission
+                  </button>
+                </div>
+              </article>
+            ) : null}
+          </div>
         </div>
       </section>
     </AppShell>
   );
-}
-
-function CharacterCard({ code, name, role, dialogue }) {
-  return (
-    <article className="brief-card character-card">
-      <div className="character-top">
-        <div className="character-avatar">{code}</div>
-        <div>
-          <p className="panel-kicker">{role}</p>
-          <h3>{name}</h3>
-        </div>
-      </div>
-      <p className="character-dialogue">"{dialogue}"</p>
-    </article>
-  );
-}
-
-function getNoviceTip(riskClass) {
-  if (riskClass === "high") {
-    return "This is a high-risk mission. Start with stronger safeguards because bad outputs could cause real harm.";
-  }
-  if (riskClass === "medium") {
-    return "This is a medium-risk mission. Try the recommended preset first, then compare it to a weaker one.";
-  }
-  return "This is a low-risk mission. The goal is to keep the AI useful while still making it clearly labeled and accountable.";
 }
 
 export function DebriefPage() {
-  const {
-    completedMissions,
-    gameStats,
-    quizIndex,
-    quizSelection,
-    rank,
-    setQuizIndex,
-    setQuizSelection,
-    totalProgress,
-  } = useGame();
-  const quiz = quizData[quizIndex];
+  const game = useGame();
+  const quiz = game.quickQuiz[game.quizStep];
+  const showDone = game.quizChoice === "done";
 
   return (
-    <AppShell stats={gameStats} rank={rank} progress={totalProgress}>
+    <AppShell stats={makeStats(game)}>
       <section className="page">
-        <div className="section-heading">
-          <p className="eyebrow">Final Debrief</p>
-          <h2>Wrap the mission in under two minutes</h2>
-          <p>
-            This page gives you the ending: what you learned, how many missions you
-            cleared, and one final theory check.
-          </p>
-        </div>
-
-        <div className="briefing-grid">
-          <article className="brief-card">
-            <p className="panel-kicker">Campaign Summary</p>
-            <h3>{completedMissions.length} of {Object.keys(scenarioData).length} missions cleared</h3>
-            <div className="hud-meters">
-              <Meter label="Campaign Progress" value={totalProgress} tone="green" />
-              <Meter label="Public Trust" value={gameStats.trust} tone="green" />
-              <Meter label="Safety" value={gameStats.safety} tone="red" />
-              <Meter label="Innovation" value={gameStats.innovation} tone="amber" />
+        <div className="debrief-top">
+          <article className="panel">
+            <p className="panel-kicker">Scoreboard</p>
+            <h2>{game.rank}</h2>
+            <p>
+              This page summarizes what you unlocked and checks whether the main
+              idea of the project came through clearly.
+            </p>
+            <div className="score-row score-row-large">
+              <div>
+                <span>Stars</span>
+                <strong>{game.stars}</strong>
+              </div>
+              <div>
+                <span>Levels Cleared</span>
+                <strong>{game.completedMissionIds.length}</strong>
+              </div>
+              <div>
+                <span>Quiz Score</span>
+                <strong>{game.quizScore}</strong>
+              </div>
+            </div>
+            <div className="hero-actions">
+              <button className="button button-secondary" type="button" onClick={game.resetGame}>
+                Reset Run
+              </button>
+              <a className="button button-primary" href="#/missions">
+                Return To Map
+              </a>
             </div>
           </article>
 
-          <article className="brief-card">
-            <p className="panel-kicker">Presentation takeaway</p>
-            <h3>What this demonstrates</h3>
-            <p>
-              The site shows that regulation should change with the context. A student
-              assistant, a public information tool, and a medical AI should not all be
-              governed the same way.
-            </p>
+          <article className="panel">
+            <p className="panel-kicker">Unlocked Lessons</p>
+            <h3>What each level was teaching</h3>
+            <div className="sticker-grid">
+              {game.missionData.map((mission) => {
+                const cleared = game.completedMissionIds.includes(mission.id);
+                return (
+                  <div key={mission.id} className={`sticker ${cleared ? "unlocked" : ""}`}>
+                    <span>{mission.icon}</span>
+                    <strong>{mission.title}</strong>
+                    <small>{cleared ? mission.lesson : "Clear this mission to reveal its lesson."}</small>
+                  </div>
+                );
+              })}
+            </div>
           </article>
         </div>
 
-        <div className="quiz-card">
-          <p className="panel-kicker">Final Theory Check</p>
-          <h3>{quiz.question}</h3>
-          <div className="quiz-options">
-            {quiz.options.map((option, index) => {
-              const isCorrect = quizSelection !== null && index === quiz.answer;
-              const isIncorrect = quizSelection === index && index !== quiz.answer;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  className={`quiz-option ${isCorrect ? "correct" : ""} ${isIncorrect ? "incorrect" : ""}`}
-                  disabled={quizSelection !== null}
-                  onClick={() => setQuizSelection(index)}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-          <p className="quiz-feedback">{quizSelection !== null ? quiz.feedback : ""}</p>
-          <button
-            className="button button-secondary"
-            type="button"
-            onClick={() => {
-              setQuizIndex((prev) => (prev + 1) % quizData.length);
-              setQuizSelection(null);
-            }}
-          >
-            Next Question
-          </button>
-        </div>
-
-        <div className="sources-grid">
-          {[
-            ["Hacker et al. (2023)", "Supports proportional regulation, transparency, and accountability."],
-            ["Bukar et al. (2024)", "Frames AI governance through risk, reward, and resilience."],
-            ["Meskó & Topol (2023)", "Shows why healthcare needs stronger oversight."],
-            ["Cordella & Gualdi (2024)", "Explains how generative AI challenges older legal frameworks."],
-            ["Lucchi (2023)", "Focuses on copyright and training data questions."],
-            ["Taeihagh (2025)", "Highlights public trust, governance, and institutional responsibility."],
-          ].map(([title, text]) => (
-            <article className="source-card" key={title}>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </article>
-          ))}
-        </div>
+        <article className="panel quiz-panel">
+          <p className="panel-kicker">Quick Check</p>
+          <h3>Did the main point land?</h3>
+          {!showDone ? (
+            <>
+              <p>{quiz.question}</p>
+              <div className="quiz-grid">
+                {quiz.options.map((option, index) => {
+                  const isCorrect = index === quiz.answer;
+                  const chosen = game.quizChoice === index;
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      className={`quiz-option ${
+                        game.quizChoice === null ? "" : isCorrect ? "correct" : chosen ? "incorrect" : ""
+                      }`}
+                      onClick={() => game.answerQuiz(index)}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+              {game.quizChoice !== null ? (
+                <div className="hero-actions section-actions">
+                  <p className="helper-copy">
+                    {game.quizChoice === quiz.answer
+                      ? "Correct. The goal is to match oversight to risk."
+                      : "The key idea is that different AI uses need different levels of oversight."}
+                  </p>
+                  <button className="button button-primary" type="button" onClick={game.advanceQuiz}>
+                    {game.quizStep === game.quickQuiz.length - 1 ? "Finish Quiz" : "Next Question"}
+                  </button>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <p className="quiz-finish">
+              Quiz complete. The game has shown the report’s main argument through
+              scenarios instead of long text.
+            </p>
+          )}
+        </article>
       </section>
     </AppShell>
   );
+}
+
+function MissionScene({ missionId, step, passed }) {
+  if (missionId === "school") {
+    return (
+      <div className="mission-scene scene-school">
+        <div className="scene-caption">Notebook run: carry the pencil to the gold star.</div>
+        <div className="school-line">
+          <span className={`school-pencil step-${step}`}></span>
+          <span className={`school-star ${passed ? "passed" : ""}`}></span>
+        </div>
+      </div>
+    );
+  }
+
+  if (missionId === "news") {
+    return (
+      <div className="mission-scene scene-news">
+        <div className="scene-caption">Signal tower: send a verified message across the skyline.</div>
+        <div className="news-wave">
+          <span className={`news-pulse pulse-${step}`}></span>
+          <span className={`news-tower ${passed ? "passed" : ""}`}></span>
+        </div>
+      </div>
+    );
+  }
+
+  if (missionId === "art") {
+    return (
+      <div className="mission-scene scene-art">
+        <div className="scene-caption">Studio trail: guide the brushstroke onto the canvas.</div>
+        <div className="art-canvas">
+          <span className={`art-stroke stroke-${step}`}></span>
+          <span className={`art-frame ${passed ? "passed" : ""}`}></span>
+        </div>
+      </div>
+    );
+  }
+
+  if (missionId === "money") {
+    return (
+      <div className="mission-scene scene-money">
+        <div className="scene-caption">Vault route: move the coin safely into the vault.</div>
+        <div className="money-track">
+          <span className={`money-coin step-${step}`}></span>
+          <span className={`money-vault ${passed ? "passed" : ""}`}></span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mission-scene scene-health">
+      <div className="scene-caption">Clinic approach: guide the rescue pulse to the safe zone.</div>
+      <div className="health-track">
+        <span className={`health-pulse step-${step}`}></span>
+        <span className={`health-cross ${passed ? "passed" : ""}`}></span>
+      </div>
+    </div>
+  );
+}
+
+function makeStats(game) {
+  return {
+    progress: game.progress,
+    rank: game.rank,
+    stars: game.stars,
+  };
 }

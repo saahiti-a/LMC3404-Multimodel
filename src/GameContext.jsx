@@ -1,197 +1,193 @@
 import { createContext, useContext, useMemo, useState } from "react";
 import {
-  allSafeguards,
-  clamp,
-  computeMissionFit,
-  computePolicyResult,
-  crisisEvents,
+  getMissionById,
+  getProgress,
   getRank,
-  scenarioData,
-  scenarioOrder,
+  missionData,
+  quickQuiz,
+  scoreMission,
+  getUnlockedMissionIds,
 } from "./gameData";
 
 const GameContext = createContext(null);
 
+const initialMission = missionData[0].id;
+
 export function GameProvider({ children }) {
-  const [selectedScenario, setSelectedScenario] = useState("student");
-  const [context, setContext] = useState("student");
-  const [oversightValue, setOversightValue] = useState(55);
-  const [safeguards, setSafeguards] = useState(["transparency", "human", "testing", "labeling"]);
-  const [riskInputs, setRiskInputs] = useState({
-    impact: 35,
-    data: 10,
-    review: 0,
-    scale: 10,
-  });
-  const [quizIndex, setQuizIndex] = useState(0);
-  const [quizSelection, setQuizSelection] = useState(null);
-  const [gameStats, setGameStats] = useState({
-    xp: 20,
-    trust: 52,
-    safety: 48,
-    innovation: 61,
-    streak: 0,
-  });
-  const [completedMissions, setCompletedMissions] = useState([]);
-  const [missionMessage, setMissionMessage] = useState("Select a dossier, tune your loadout, and deploy.");
-  const [resolvedEvents, setResolvedEvents] = useState({});
+  const [selectedMissionId, setSelectedMissionId] = useState(initialMission);
+  const [selectedLevel, setSelectedLevel] = useState("balanced");
+  const [selectedTools, setSelectedTools] = useState(["labels"]);
+  const [activeStep, setActiveStep] = useState(1);
+  const [completedMissionIds, setCompletedMissionIds] = useState([]);
+  const [missionResults, setMissionResults] = useState({});
+  const [stars, setStars] = useState(0);
+  const [spark, setSpark] = useState(60);
+  const [safety, setSafety] = useState(60);
+  const [streak, setStreak] = useState(0);
+  const [lastResult, setLastResult] = useState(null);
+  const [quizStep, setQuizStep] = useState(0);
+  const [quizChoice, setQuizChoice] = useState(null);
+  const [quizScore, setQuizScore] = useState(0);
 
-  const currentScenario = scenarioData[selectedScenario];
-  const policy = useMemo(
-    () => computePolicyResult(context, oversightValue, safeguards),
-    [context, oversightValue, safeguards]
+  const currentMission = getMissionById(selectedMissionId);
+  const progress = useMemo(() => getProgress(completedMissionIds.length), [completedMissionIds.length]);
+  const rank = useMemo(() => getRank(stars), [stars]);
+  const unlockedMissionIds = useMemo(() => getUnlockedMissionIds(missionResults), [missionResults]);
+  const nextLockedMission = useMemo(
+    () => missionData.find((mission) => !unlockedMissionIds.includes(mission.id)) ?? null,
+    [unlockedMissionIds]
   );
-  const missionFit = useMemo(
-    () =>
-      computeMissionFit({
-        context,
-        missionId: selectedScenario,
-        oversightValue,
-        safeguards,
-        policy,
-      }),
-    [context, selectedScenario, oversightValue, safeguards, policy]
+  const campaignScore = useMemo(
+    () => missionData.reduce((total, mission) => total + (missionResults[mission.id]?.score ?? 0), 0),
+    [missionResults]
   );
-  const rank = getRank(gameStats.xp);
-  const totalProgress = clamp((completedMissions.length / scenarioOrder.length) * 100);
-
-  function toggleSafeguard(name) {
-    setSafeguards((prev) =>
-      prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]
-    );
-  }
+  const averageScore = useMemo(() => {
+    const playedScores = Object.values(missionResults).map((result) => result.score);
+    if (!playedScores.length) return 0;
+    return Math.round(playedScores.reduce((total, score) => total + score, 0) / playedScores.length);
+  }, [missionResults]);
 
   function selectMission(id) {
-    setSelectedScenario(id);
-    setContext(id);
-    setMissionMessage(`Dossier ${scenarioData[id].codename} loaded. Adjust your field policy.`);
+    if (!unlockedMissionIds.includes(id)) return false;
+    const mission = getMissionById(id);
+    setSelectedMissionId(id);
+    setSelectedLevel(mission.bestLevel === "strong" ? "balanced" : mission.bestLevel);
+    setSelectedTools([mission.bestTools[0]]);
+    setActiveStep(1);
+    setLastResult(null);
+    return true;
   }
 
-  function applyMissionPreset(mode = "recommended") {
-    const scenario = scenarioData[selectedScenario];
-    const [min, max] = scenario.winRange;
-    const midpoint = Math.round((min + max) / 2);
-
-    if (mode === "recommended") {
-      setContext(selectedScenario);
-      setOversightValue(midpoint);
-      setSafeguards([...scenario.required]);
-      setMissionMessage(`Recommended preset loaded for ${scenario.codename}.`);
-      return;
-    }
-
-    if (mode === "lighter") {
-      setContext(selectedScenario);
-      setOversightValue(Math.max(10, midpoint - 22));
-      setSafeguards(scenario.required.slice(0, Math.max(1, scenario.required.length - 1)));
-      setMissionMessage("A lighter policy is loaded. Faster, but it may miss important protections.");
-      return;
-    }
-
-    setContext(selectedScenario);
-    setOversightValue(Math.min(95, midpoint + 20));
-    setSafeguards([...new Set([...scenario.required, "transparency", "testing", "audit", "privacy"])]);
-    setMissionMessage("A stricter policy is loaded. Safer, but possibly heavier than needed.");
+  function toggleTool(toolId) {
+    setSelectedTools((prev) => {
+      if (prev.includes(toolId)) {
+        return prev.filter((item) => item !== toolId);
+      }
+      if (prev.length >= 3) {
+        return [...prev.slice(1), toolId];
+      }
+      return [...prev, toolId];
+    });
   }
 
-  function deployMission() {
-    const alreadyCompleted = completedMissions.includes(selectedScenario);
+  function playMission() {
+    const result = scoreMission(currentMission, selectedLevel, selectedTools);
+    const alreadyWon = completedMissionIds.includes(currentMission.id);
 
-    if (missionFit.score >= 80 && !alreadyCompleted) {
-      setCompletedMissions((prev) => [...prev, selectedScenario]);
-      setMissionMessage(`Mission cleared. ${currentScenario.reward}`);
-      setGameStats((prev) => ({
-        xp: prev.xp + 30,
-        trust: clamp(prev.trust + 8),
-        safety: clamp(prev.safety + 6),
-        innovation: clamp(prev.innovation + 3),
-        streak: prev.streak + 1,
-      }));
-      return true;
-    }
+    setLastResult({
+      ...result,
+      missionId: currentMission.id,
+      title: currentMission.title,
+    });
+    setActiveStep(3);
 
-    if (missionFit.score >= 80 && alreadyCompleted) {
-      setMissionMessage("Mission already cleared. Move to a new dossier or improve your campaign stats elsewhere.");
-      return true;
-    }
+    setMissionResults((prev) => ({
+      ...prev,
+      [currentMission.id]: result,
+    }));
 
-    setMissionMessage(
-      missionFit.missing.length
-        ? `Deployment denied. Missing: ${missionFit.missing.join(", ")}.`
-        : "Deployment denied. Oversight level or context fit is still off target."
+    setSpark((prev) =>
+      result.result === "perfect" ? Math.min(prev + 10, 100) : result.result === "good" ? Math.min(prev + 4, 100) : Math.max(prev - 6, 0)
     );
-    setGameStats((prev) => ({
-      ...prev,
-      trust: clamp(prev.trust - 2),
-      streak: 0,
-    }));
-    return false;
+
+    setSafety((prev) =>
+      result.result === "perfect" ? Math.min(prev + 12, 100) : result.result === "good" ? Math.min(prev + 5, 100) : Math.max(prev - 8, 0)
+    );
+
+    if (!alreadyWon && result.result !== "miss") {
+      setCompletedMissionIds((prev) => [...prev, currentMission.id]);
+    }
+
+    if (result.result === "perfect") {
+      setStars((prev) => prev + (alreadyWon ? 1 : result.stars));
+      setStreak((prev) => prev + 1);
+    } else if (result.result === "good") {
+      setStars((prev) => prev + (alreadyWon ? 0 : Math.max(1, result.stars - 1)));
+      setStreak((prev) => prev + 1);
+    } else {
+      setStreak(0);
+    }
+
+    return result;
   }
 
-  function resolveEvent(eventId, optionIndex) {
-    if (resolvedEvents[eventId]) return;
-    const event = crisisEvents.find((item) => item.id === eventId);
-    const option = event.options[optionIndex];
-
-    setResolvedEvents((prev) => ({
-      ...prev,
-      [eventId]: { selected: optionIndex, note: option.note },
-    }));
-    setGameStats((prev) => ({
-      xp: prev.xp + option.effect.xp,
-      trust: clamp(prev.trust + option.effect.trust),
-      safety: clamp(prev.safety + option.effect.safety),
-      innovation: clamp(prev.innovation + option.effect.innovation),
-      streak: prev.streak + 1,
-    }));
+  function nextMission() {
+    const currentIndex = missionData.findIndex((mission) => mission.id === selectedMissionId);
+    const nextUnlocked = missionData.find(
+      (mission, index) => index > currentIndex && unlockedMissionIds.includes(mission.id)
+    );
+    const fallback = missionData.find((mission) => unlockedMissionIds.includes(mission.id)) ?? missionData[0];
+    selectMission((nextUnlocked ?? fallback).id);
   }
 
-  function resetCampaign() {
-    setSelectedScenario("student");
-    setContext("student");
-    setOversightValue(55);
-    setSafeguards(["transparency", "human", "testing", "labeling"]);
-    setRiskInputs({ impact: 35, data: 10, review: 0, scale: 10 });
-    setQuizIndex(0);
-    setQuizSelection(null);
-    setGameStats({ xp: 20, trust: 52, safety: 48, innovation: 61, streak: 0 });
-    setCompletedMissions([]);
-    setMissionMessage("Campaign reset. Select a dossier and begin again.");
-    setResolvedEvents({});
+  function answerQuiz(index) {
+    if (quizChoice !== null) return;
+    setQuizChoice(index);
+    if (index === quickQuiz[quizStep].answer) {
+      setQuizScore((prev) => prev + 1);
+      setStars((prev) => prev + 1);
+    }
+  }
+
+  function advanceQuiz() {
+    if (quizStep < quickQuiz.length - 1) {
+      setQuizStep((prev) => prev + 1);
+      setQuizChoice(null);
+      return;
+    }
+    setQuizChoice("done");
+  }
+
+  function resetGame() {
+    setSelectedMissionId(initialMission);
+    setSelectedLevel("balanced");
+    setSelectedTools(["labels"]);
+    setActiveStep(1);
+    setCompletedMissionIds([]);
+    setMissionResults({});
+    setStars(0);
+    setSpark(60);
+    setSafety(60);
+    setStreak(0);
+    setLastResult(null);
+    setQuizStep(0);
+    setQuizChoice(null);
+    setQuizScore(0);
   }
 
   const value = {
-    allSafeguards,
-    completedMissions,
-    context,
-    currentScenario,
-    gameStats,
-    missionFit,
-    missionMessage,
-    oversightValue,
-    policy,
-    quizIndex,
-    quizSelection,
+    activeStep,
+    completedMissionIds,
+    currentMission,
+    campaignScore,
+    lastResult,
+    missionData,
+    missionResults,
+    progress,
+    quickQuiz,
+    quizChoice,
+    quizScore,
+    quizStep,
     rank,
-    resolvedEvents,
-    riskInputs,
-    safeguards,
-    scenarioData,
-    scenarioOrder,
-    selectedScenario,
-    totalProgress,
-    setContext,
-    applyMissionPreset,
-    setMissionMessage,
-    setOversightValue,
-    setQuizIndex,
-    setQuizSelection,
-    setRiskInputs,
-    toggleSafeguard,
+    averageScore,
+    safety,
+    selectedLevel,
+    selectedMissionId,
+    selectedTools,
+    spark,
+    stars,
+    streak,
+    unlockedMissionIds,
+    nextLockedMission,
+    setActiveStep,
+    setSelectedLevel,
+    toggleTool,
     selectMission,
-    deployMission,
-    resolveEvent,
-    resetCampaign,
+    playMission,
+    nextMission,
+    answerQuiz,
+    advanceQuiz,
+    resetGame,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
@@ -199,8 +195,6 @@ export function GameProvider({ children }) {
 
 export function useGame() {
   const value = useContext(GameContext);
-  if (!value) {
-    throw new Error("useGame must be used within GameProvider");
-  }
+  if (!value) throw new Error("useGame must be used inside GameProvider");
   return value;
 }
