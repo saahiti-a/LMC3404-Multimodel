@@ -402,6 +402,32 @@ export function DebriefPage() {
   const game = useGame();
   const quiz = game.quickQuiz[game.quizStep];
   const showDone = game.quizChoice === "done";
+  const researchSources = [
+    {
+      title: "Hacker et al. (2023)",
+      note: "Supports the idea that AI oversight should be flexible and risk-based instead of one universal rule.",
+    },
+    {
+      title: "Taeihagh (2025)",
+      note: "Helps explain why governance, public trust, and institutional accountability matter for AI used at scale.",
+    },
+    {
+      title: "Lucchi (2023)",
+      note: "Informs the mission about copyright, training data, and fairness concerns in generative AI systems.",
+    },
+    {
+      title: "Cordella & Gualdi (2024)",
+      note: "Supports the idea that AI creates legal and governance challenges that older systems are still adapting to.",
+    },
+    {
+      title: "Meskó & Topol (2023)",
+      note: "Supports the argument that healthcare AI needs the strongest safeguards because errors can directly harm people.",
+    },
+    {
+      title: "Bukar et al. (2024)",
+      note: "Reinforces the project’s focus on balancing innovation, safety, resilience, and accountability.",
+    },
+  ];
 
   return (
     <AppShell stats={makeStats(game)}>
@@ -499,6 +525,37 @@ export function DebriefPage() {
               scenarios instead of long text.
             </p>
           )}
+        </article>
+
+        <article className="panel sources-panel">
+          <p className="panel-kicker">Research Behind The Game</p>
+          <h3>What informed these levels and scenarios</h3>
+          <p className="helper-copy">
+            This project is based on research about AI governance, misinformation,
+            copyright, finance, healthcare, accountability, and public trust. Each
+            level turns one of those research areas into a playable example.
+          </p>
+          <div className="sources-grid">
+            {researchSources.map((source) => (
+              <div key={source.title} className="source-chip-card">
+                <strong>{source.title}</strong>
+                <p>{source.note}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel sources-panel">
+          <p className="panel-kicker">So What?</p>
+          <h3>Why this matters beyond the game</h3>
+          <p className="helper-copy">
+            AI tools are already shaping how people learn, get information, make
+            money decisions, create art, and think about healthcare. If all AI is
+            treated the same, the rules will either be too weak for dangerous uses
+            or too restrictive for lower-risk ones. The main takeaway of this
+            project is that regulation matters, but it works best when it matches
+            the level of risk.
+          </p>
         </article>
       </section>
     </AppShell>

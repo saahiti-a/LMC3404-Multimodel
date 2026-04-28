@@ -423,6 +423,33 @@ h3 {
   align-items: start;
 }
 
+.sources-panel {
+  margin-top: 1rem;
+}
+
+.sources-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.source-chip-card {
+  padding: 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.source-chip-card strong {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+.source-chip-card p {
+  margin-bottom: 0;
+}
+
 .meter-stack {
   gap: 0.9rem;
 }
@@ -1243,6 +1270,7 @@ h3 {
   .mission-grid,
   .map-overview,
   .debrief-top,
+  .sources-grid,
   .scenario-shell,
   .mission-context-grid,
   .choice-grid,
